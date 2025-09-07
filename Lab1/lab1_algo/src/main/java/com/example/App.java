@@ -19,12 +19,8 @@ public class App {
 
         try {
             String content = Reader.readFile(fileName);
-            if (content != null) {
-                System.out.println("File content:\n");
-                System.out.println(content);
-            } else {
-                System.err.println("File is empty!");
-            }
+            System.out.println("File content:\n");
+            System.out.println(content);
         } catch (RuntimeException e) {
             System.err.println(e.getMessage());
         }

@@ -8,10 +8,10 @@ public class Reader {
 
     public static String readFile(String fileName) {
         StringBuilder content = new StringBuilder();
-        boolean isEmpty = true;
 
         try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
             String line;
+            boolean isEmpty = true;
 
             while ((line = reader.readLine()) != null) {
                 if (!line.trim().isEmpty()) {
@@ -21,7 +21,7 @@ public class Reader {
             }
 
             if (isEmpty) {
-                return null; 
+                throw new RuntimeException("File is empty!");
             }
 
             return content.toString();

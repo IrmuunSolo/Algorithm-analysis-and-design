@@ -27,8 +27,10 @@ class ReaderTest {
     void testEmptyFile() throws IOException {
         Path testFile = Files.createTempFile("empty", ".txt");
 
-        String result = Reader.readFile(testFile.toString());
-        assertNull(result);
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> Reader.readFile(testFile.toString()));
+
+        assertEquals("File is empty!", ex.getMessage());
 
         Files.deleteIfExists(testFile);
     }
@@ -38,9 +40,10 @@ class ReaderTest {
         Path testFile = Files.createTempFile("spaces", ".txt");
         Files.write(testFile, "   \n\t\n    ".getBytes());
 
-        String result = Reader.readFile(testFile.toString());
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> Reader.readFile(testFile.toString()));
 
-        assertNull(result);
+        assertEquals("File is empty!", ex.getMessage());
 
         Files.deleteIfExists(testFile);
     }
