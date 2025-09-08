@@ -3,8 +3,26 @@ package com.example;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class Reader {
+
+    public static String md5Hash(String input) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] hash = md.digest(input.getBytes());
+
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                hexString.append(String.format("%02x", b));
+            }
+            return hexString.toString();
+
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("MD5 not supported", e);
+        }
+    }
 
     public static String readFile(String fileName) {
         StringBuilder content = new StringBuilder();
@@ -24,6 +42,7 @@ public class Reader {
                 throw new RuntimeException("File is empty!");
             }
 
+            // Файлын бүх текстийг MD5-р encrypt хийж буцаана
             return content.toString();
 
         } catch (IOException e) {
@@ -31,3 +50,4 @@ public class Reader {
         }
     }
 }
+
