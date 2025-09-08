@@ -1,10 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
-
 #include "Reader.h"
-#define CATCH_CONFIG_MAIN
 #include <fstream>
 #include <filesystem>
 #include <string>
+
+#define CATCH_CONFIG_MAIN
 
 TEST_CASE("Reader::readFile normal file", "[Reader]")
 {
@@ -13,12 +13,11 @@ TEST_CASE("Reader::readFile normal file", "[Reader]")
     ofs << "Hello World\nC++ Programming";
     ofs.close();
 
-    bool empty;
-    std::string content = Reader::readFile(fileName, empty);
+    std::string content = Reader::readFile(fileName);
 
-    REQUIRE_FALSE(empty);
     REQUIRE(content.find("Hello World") != std::string::npos);
     REQUIRE(content.find("C++ Programming") != std::string::npos);
+    REQUIRE(content.find("file is empty") == std::string::npos);
 
     std::filesystem::remove(fileName);
 }
@@ -29,10 +28,9 @@ TEST_CASE("Reader::readFile empty file", "[Reader]")
     std::ofstream ofs(fileName);
     ofs.close();
 
-    bool empty;
-    std::string content = Reader::readFile(fileName, empty);
+    std::string content = Reader::readFile(fileName);
 
-    REQUIRE(empty);
+    REQUIRE(content == "file is empty");
 
     std::filesystem::remove(fileName);
 }
@@ -44,16 +42,14 @@ TEST_CASE("Reader::readFile file with spaces only", "[Reader]")
     ofs << "   \n\t\n    ";
     ofs.close();
 
-    bool empty;
-    std::string content = Reader::readFile(fileName, empty);
+    std::string content = Reader::readFile(fileName);
 
-    REQUIRE(empty);
+    REQUIRE(content == "file is empty");
 
     std::filesystem::remove(fileName);
 }
 
 TEST_CASE("Reader::readFile non-existent file", "[Reader]")
 {
-    bool empty;
-    REQUIRE_THROWS_AS(Reader::readFile("nonexistent_file.txt", empty), std::runtime_error);
+    REQUIRE_THROWS_AS(Reader::readFile("nonexistent_file.txt"), std::runtime_error);
 }

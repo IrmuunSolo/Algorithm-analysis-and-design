@@ -19,8 +19,8 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(Catch2)
 
-add_executable(main_exec src/main.cpp include/Reader.h)
-add_executable(tests tests/test.cpp include/Reader.h)
+add_executable(main_exec src/main.cpp src/Reader.cpp include/Reader.h)
+add_executable(tests tests/test.cpp src/Reader.cpp include/Reader.h)
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 
 enable_testing()
