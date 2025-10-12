@@ -2,13 +2,7 @@ package com.example;
 
 import java.util.Scanner;
 
-/**
- * mvn clean
- * mvn compile
- * mvn package
- * java -cp target/lab1_algo-1.0-SNAPSHOT.jar com.example.App
- *
- */
+//java -cp target/lab1_algo-1.0-SNAPSHOT.jar com.example.App
 
 public class App {
     public static void main(String[] args) {

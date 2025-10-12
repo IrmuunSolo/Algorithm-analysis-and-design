@@ -43,7 +43,7 @@ public class SortsTest {
         int[] a = datasets.get(3);
         Sorts.mergeSort(a);
         int idx = Searchs.binarySearchRecursive(a, 15);
-        assertEquals(8, idx); // 0-с эхэлдэг индекс
+        assertEquals(8, idx); 
         assertEquals(-1, Searchs.binarySearchRecursive(a, 100));
     }
 }

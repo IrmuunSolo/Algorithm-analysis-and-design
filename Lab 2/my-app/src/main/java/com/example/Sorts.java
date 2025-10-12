@@ -4,7 +4,6 @@ import java.util.Arrays;
 
 public class Sorts {
 
-    // Insertion sort (in-place)
     public static void insertionSort(int[] a) {
         for (int i = 1; i < a.length; i++) {
             int key = a[i];
@@ -17,7 +16,6 @@ public class Sorts {
         }
     }
 
-    // Merge sort (divide & conquer)
     public static void mergeSort(int[] a) {
         if (a == null || a.length <= 1)
             return;
@@ -53,23 +51,23 @@ public class Sorts {
             a[k++] = R[j++];
     }
 
-    // Divide & conquer max
     public static int maxDivideConquer(int[] a) {
         if (a == null || a.length == 0)
             throw new IllegalArgumentException("Empty array");
-        return maxRec(a, 0, a.length - 1);
+        return Max(a, 0, a.length - 1);
     }
 
-    private static int maxRec(int[] a, int l, int r) {
+    public static int Max(int a[], int l, int r) {
+
         if (l == r)
             return a[l];
         int m = l + (r - l) / 2;
-        int leftMax = maxRec(a, l, m);
-        int rightMax = maxRec(a, m + 1, r);
+        int leftMax = Max(a, l, m);
+        int rightMax = Max(a, m + 1, r);
         return Math.max(leftMax, rightMax);
+
     }
 
-    // helper for printing (for manual run)
     public static String toStr(int[] a) {
         return Arrays.toString(a);
     }

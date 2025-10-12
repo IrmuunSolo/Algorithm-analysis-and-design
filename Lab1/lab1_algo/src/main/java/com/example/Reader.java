@@ -42,7 +42,6 @@ public class Reader {
                 throw new RuntimeException("File is empty!");
             }
 
-            // Файлын бүх текстийг MD5-р encrypt хийж буцаана
             return content.toString();
 
         } catch (IOException e) {

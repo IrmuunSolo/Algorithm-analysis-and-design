@@ -41,3 +41,6 @@
 
 *.docx
 All lecture/*
+/data/
+mapdata/*
+!mapdata/README.md

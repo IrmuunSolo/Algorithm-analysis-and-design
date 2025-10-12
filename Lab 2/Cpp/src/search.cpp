@@ -3,6 +3,13 @@
 namespace alg
 {
 
+    int binarySearchRecursive(const std::vector<int> &a, int key)
+    {
+        if (a.empty())
+            return -1;
+        return bsRec(a, 0, (int)a.size() - 1, key);
+    }
+
     static int bsRec(const std::vector<int> &a, int l, int r, int key)
     {
         if (l > r)
@@ -15,12 +22,4 @@ namespace alg
         else
             return bsRec(a, m + 1, r, key);
     }
-
-    int binarySearchRecursive(const std::vector<int> &a, int key)
-    {
-        if (a.empty())
-            return -1;
-        return bsRec(a, 0, (int)a.size() - 1, key);
-    }
-
 }

@@ -2,7 +2,6 @@ package com.example;
 
 public class Searchs {
 
-    // assumes array is sorted ascending
     public static int binarySearchRecursive(int[] a, int key) {
         return bsRec(a, 0, a.length - 1, key);
     }
