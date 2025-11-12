@@ -45,3 +45,10 @@ All lecture/*
 mapdata/*
 !mapdata/README.md
 .venv/
+
+# mapdata file
+*.cpg
+*.dbf
+*.prj
+*.qix
+*.shx
