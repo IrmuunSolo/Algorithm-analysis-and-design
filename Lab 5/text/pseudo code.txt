@@ -1,0 +1,51 @@
+static a, ans
+scan t
+out strblder
+while()
+n scan
+a, ans new
+scan a
+solve
+for out append \n
+print out toString
+static solve(l,r,depth)
+l > r
+idx = l
+for() idx = maximum
+ans = depth
+solve(leftsubarray)
+solve(rightsubarray)
+
+
+final mod
+superpow(a,b[])
+ ret redmodpow(a,b,bLght)
+recmodpow()
+if len=0
+lastdigit
+part1=modpow((recmodpow a,b,len-1),10)
+part2=modpow(a,lastdigit)
+ret part1*2%mod
+modpow(a,k)
+a%=mod
+reslt=1
+while k>0
+ if sondgoi reslt*a%mod
+ a*2%mod
+ k/=2
+ret reslt
+
+s.len<2 ret ""
+hashset letters
+for(ch:s.tochararr)
+ letters.add(ch)
+for(0->s.len)
+ ch=s.charat(i)
+ if(!letters.conUp(ch)&&letters.conLow(ch)
+  left=LNSS(s.substr(0,i))
+  right=LNSS(s.substr(i+1))
+  if(left.len>=right.len)
+   ret left
+  else right
+
+

@@ -28,24 +28,28 @@ public class ShapefileRoadGraphLoader {
 
     public ShapefileRoadGraphLoader(File shapefile, double minLon, double minLat, double maxLon, double maxLat) {
         this.shapefile = shapefile;
-        this.minLon = minLon; this.minLat = minLat; this.maxLon = maxLon; this.maxLat = maxLat;
+        this.minLon = minLon;
+        this.minLat = minLat;
+        this.maxLon = maxLon;
+        this.maxLat = maxLat;
     }
 
     public Graph loadGraph() throws Exception {
         Graph graph = new Graph();
-        Map<String,Object> map = new HashMap<>();
+        Map<String, Object> map = new HashMap<>();
         map.put("url", toUrl(shapefile));
 
         DataStore store = DataStoreFinder.getDataStore(map);
-        if (store == null) throw new IllegalStateException("Cannot open shapefile: " + shapefile);
+        if (store == null)
+            throw new IllegalStateException("Cannot open shapefile: " + shapefile);
         String typeName = store.getTypeNames()[0];
         SimpleFeatureSource source = store.getFeatureSource(typeName);
 
         CoordinateReferenceSystem crs = source.getSchema().getCoordinateReferenceSystem();
-        // Build bbox filter using property-based overload (avoids envelope type mismatch)
+
         String geomAttr = source.getSchema().getGeometryDescriptor().getLocalName();
         FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2();
-        // Geofabrik OSM shapefiles are typically in EPSG:4326
+
         Filter filter = ff.bbox(ff.property(geomAttr), minLon, minLat, maxLon, maxLat, "EPSG:4326");
         Query query = new Query(typeName, filter);
 
@@ -56,37 +60,44 @@ public class ShapefileRoadGraphLoader {
             while (it.hasNext()) {
                 SimpleFeature f = it.next();
                 Object geomObj = f.getDefaultGeometry();
-                if (!(geomObj instanceof Geometry)) continue;
+                if (!(geomObj instanceof Geometry))
+                    continue;
                 Geometry geom = (Geometry) geomObj;
 
-                // Read oneway attribute if present ("yes", "-1", "no"/null)
+                // Нэг чиглэлтэй ирмэгийг авах ("yes", "-1", "no"/null)
                 String onewayRaw = null;
                 try {
                     Object v = f.getAttribute("oneway");
-                    if (v != null) onewayRaw = String.valueOf(v).trim().toLowerCase();
-                } catch (Exception ignore) {}
+                    if (v != null)
+                        onewayRaw = String.valueOf(v).trim().toLowerCase();
+                } catch (Exception ignore) {
+                }
                 int dirFlag = 0; // 0=both, 1=forward, -1=reverse
-                if ("yes".equals(onewayRaw) || "1".equals(onewayRaw) || "true".equals(onewayRaw)) dirFlag = 1;
-                else if ("-1".equals(onewayRaw)) dirFlag = -1;
+                if ("yes".equals(onewayRaw) || "1".equals(onewayRaw) || "true".equals(onewayRaw))
+                    dirFlag = 1;
+                else if ("-1".equals(onewayRaw))
+                    dirFlag = -1;
 
-                // Parse attributes for access and speed weighting
                 String fclass = getStringAttr(f, "fclass");
                 String access = getStringAttr(f, "access");
                 String surface = getStringAttr(f, "surface");
                 double maxSpeed = parseMaxSpeedKmh(getStringAttr(f, "maxspeed"));
-                if (Double.isNaN(maxSpeed)) maxSpeed = defaultSpeedForClass(fclass, surface);
+                if (Double.isNaN(maxSpeed))
+                    maxSpeed = defaultSpeedForClass(fclass, surface);
                 boolean drivable = isDrivable(fclass, access);
 
                 if (geom instanceof MultiLineString) {
                     MultiLineString mls = (MultiLineString) geom;
                     for (int i = 0; i < mls.getNumGeometries(); i++) {
                         LineString ls = (LineString) mls.getGeometryN(i);
-                        if (drivable) processLineString(ls, graph, coordToId, nextId, dirFlag, maxSpeed);
+                        if (drivable)
+                            processLineString(ls, graph, coordToId, nextId, dirFlag, maxSpeed);
                         nextId += ls.getNumPoints();
                     }
                 } else if (geom instanceof LineString) {
                     LineString ls = (LineString) geom;
-                    if (drivable) processLineString(ls, graph, coordToId, nextId, dirFlag, maxSpeed);
+                    if (drivable)
+                        processLineString(ls, graph, coordToId, nextId, dirFlag, maxSpeed);
                     nextId += ls.getNumPoints();
                 }
             }
@@ -97,15 +108,17 @@ public class ShapefileRoadGraphLoader {
         return graph;
     }
 
-    private void processLineString(LineString ls, Graph graph, Map<String, Long> coordToId, long startId, int dirFlag, double speedKmh) {
+    private void processLineString(LineString ls, Graph graph, Map<String, Long> coordToId, long startId, int dirFlag,
+            double speedKmh) {
         Coordinate[] coords = ls.getCoordinates();
         Node prev = null;
         long id = startId;
         for (Coordinate c : coords) {
-            // Coordinates are (x=lon, y=lat)
+
             double lon = c.getX();
             double lat = c.getY();
-            if (!GeoUtils.withinBbox(lon, lat, minLon, minLat, maxLon, maxLat)) continue;
+            if (!GeoUtils.withinBbox(lon, lat, minLon, minLat, maxLon, maxLat))
+                continue;
             String key = GeoUtils.keyFor(lat, lon);
             Long existing = coordToId.get(key);
             long nodeId;
@@ -120,60 +133,84 @@ public class ShapefileRoadGraphLoader {
             if (prev != null) {
                 double lengthM = com.example.util.GeoUtils.haversineMeters(prev.lat, prev.lon, cur.lat, cur.lon);
                 double weightSec = lengthM / Math.max(1.0, (speedKmh / 3.6));
-                if (dirFlag == 1) graph.addEdge(prev, cur, weightSec);
-                else if (dirFlag == -1) graph.addEdge(cur, prev, weightSec);
-                else graph.addUndirectedEdge(prev, cur, weightSec);
+                if (dirFlag == 1)
+                    graph.addEdge(prev, cur, weightSec);
+                else if (dirFlag == -1)
+                    graph.addEdge(cur, prev, weightSec);
+                else
+                    graph.addUndirectedEdge(prev, cur, weightSec);
             }
             prev = cur;
         }
     }
 
     private static String getStringAttr(SimpleFeature f, String name) {
-        try { Object v = f.getAttribute(name); return v == null ? null : String.valueOf(v); }
-        catch (Exception ignore) { return null; }
+        try {
+            Object v = f.getAttribute(name);
+            return v == null ? null : String.valueOf(v);
+        } catch (Exception ignore) {
+            return null;
+        }
     }
 
     private static boolean isDrivable(String fclass, String access) {
         String cls = s(fclass);
         String acc = s(access);
-        if ("no".equals(acc) || "private".equals(acc)) return false;
-        // exclude clear non-car ways
-        if (in(cls, "footway","pedestrian","steps","path","cycleway","bridleway")) return false;
+        if ("no".equals(acc) || "private".equals(acc))
+            return false;
+
+        if (in(cls, "footway", "pedestrian", "steps", "path", "cycleway", "bridleway"))
+            return false;
         return true;
     }
 
     private static double defaultSpeedForClass(String fclass, String surface) {
         String cls = s(fclass);
-        if (in(cls, "motorway")) return 90;
-        if (in(cls, "trunk")) return 80;
-        if (in(cls, "primary")) return 70;
-        if (in(cls, "secondary")) return 60;
-        if (in(cls, "tertiary")) return 50;
-        if (in(cls, "residential")) return 30;
-        if (in(cls, "living_street")) return 20;
-        if (in(cls, "service")) return 20;
-        if (in(cls, "unclassified")) return 40;
-        if (in(cls, "track")) return 25;
-        return 40; // fallback
+        if (in(cls, "motorway"))
+            return 90;
+        if (in(cls, "trunk"))
+            return 80;
+        if (in(cls, "primary"))
+            return 70;
+        if (in(cls, "secondary"))
+            return 60;
+        if (in(cls, "tertiary"))
+            return 50;
+        if (in(cls, "residential"))
+            return 30;
+        if (in(cls, "living_street"))
+            return 20;
+        if (in(cls, "service"))
+            return 20;
+        if (in(cls, "unclassified"))
+            return 40;
+        if (in(cls, "track"))
+            return 25;
+        return 40;
     }
 
     private static double parseMaxSpeedKmh(String raw) {
-        if (raw == null) return Double.NaN;
+        if (raw == null)
+            return Double.NaN;
         String s = raw.trim().toLowerCase();
         try {
-            // handles simple numeric like 60, 80
-            return Double.parseDouble(s.replaceAll("[^0-9.]",""));
+
+            return Double.parseDouble(s.replaceAll("[^0-9.]", ""));
         } catch (Exception e) {
             return Double.NaN;
         }
     }
 
     private static boolean in(String val, String... opts) {
-        for (String o : opts) if (o.equals(val)) return true;
+        for (String o : opts)
+            if (o.equals(val))
+                return true;
         return false;
     }
 
-    private static String s(String v) { return v == null ? "" : v.trim().toLowerCase(); }
+    private static String s(String v) {
+        return v == null ? "" : v.trim().toLowerCase();
+    }
 
     private static java.net.URL toUrl(File f) throws MalformedURLException {
         return f.toURI().toURL();

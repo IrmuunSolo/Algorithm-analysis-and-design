@@ -22,7 +22,6 @@ public class GeoUtils {
     }
 
     public static String keyFor(double lat, double lon) {
-        // Round to 1e-5 (~1m) to merge close vertices
         return String.format("%.5f,%.5f", lat, lon);
     }
 

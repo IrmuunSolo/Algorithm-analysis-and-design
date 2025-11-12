@@ -19,7 +19,7 @@ public class AlgorithmsTest {
         final Node D = g.addNode(4, 1, 0);
 
         GFixture() {
-            // Two routes from A to C: A-B-C (1+1), A-D-C (1+10)
+            // A to C: A-B-C (1+1), A-D-C (1+10)
             g.addUndirectedEdge(A, B, 1.0);
             g.addUndirectedEdge(B, C, 1.0);
             g.addUndirectedEdge(A, D, 1.0);

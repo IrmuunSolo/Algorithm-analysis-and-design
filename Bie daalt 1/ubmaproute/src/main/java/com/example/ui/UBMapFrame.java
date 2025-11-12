@@ -58,8 +58,8 @@ public class UBMapFrame extends JFrame {
     private final JButton loadBtn = new JButton("Load UB Roads");
     private final JButton clearBtn = new JButton("Clear");
     private final JButton routeBtn = new JButton("Route");
-    private final JComboBox<String> algoSelect = new JComboBox<>(new String[] {"Dijkstra", "DFS", "BFS"});
-    // Right-side result boxes
+    private final JComboBox<String> algoSelect = new JComboBox<>(new String[] { "Dijkstra", "DFS", "BFS" });
+
     private final JTextField algoBox = createInfoBox();
     private final JTextField nodesBox = createInfoBox();
     private final JTextField distBox = createInfoBox();
@@ -74,13 +74,12 @@ public class UBMapFrame extends JFrame {
     private RoutePainter routePainter;
     private PointsPainter pointsPainter = new PointsPainter();
 
-    // UB approximate bounds (lon/lat in WGS84)
     private static final double MIN_LON = 106.6;
     private static final double MAX_LON = 107.2;
     private static final double MIN_LAT = 47.7;
     private static final double MAX_LAT = 48.2;
 
-    private static final int MIN_ZOOM = 0; // allow full zoom-out
+    private static final int MIN_ZOOM = 0;
     private static final int MAX_ZOOM = 12;
 
     private static final File DEFAULT_SHP = new File("mapdata/gis_osm_roads_free_1.shp");
@@ -92,29 +91,27 @@ public class UBMapFrame extends JFrame {
 
         add(map, BorderLayout.CENTER);
 
-        // Right-side vertical box with controls and results
         JPanel side = new JPanel();
         side.setLayout(new BoxLayout(side, BoxLayout.Y_AXIS));
         side.setBorder(new EmptyBorder(8, 8, 8, 8));
         side.setPreferredSize(new Dimension(300, 0));
 
         JLabel algoLbl = new JLabel("Algorithm:");
-        // Center align components within the box (JComponent has setAlignmentX)
-        for (javax.swing.JComponent jc : new javax.swing.JComponent[]{loadBtn, algoLbl, algoSelect, routeBtn, clearBtn, status, result, algoBox, nodesBox, distBox, timeBox, msBox, memBox}) {
+        for (javax.swing.JComponent jc : new javax.swing.JComponent[] { loadBtn, algoLbl, algoSelect, routeBtn,
+                clearBtn, status, result, algoBox, nodesBox, distBox, timeBox, msBox, memBox }) {
             jc.setAlignmentX(javax.swing.JComponent.CENTER_ALIGNMENT);
         }
 
         result.setFont(result.getFont().deriveFont(Font.BOLD, 14f));
         result.setHorizontalAlignment(SwingConstants.CENTER);
 
-        // Limit dropdown popup height
         algoSelect.setMaximumRowCount(4);
 
         side.add(loadBtn);
         side.add(Box.createVerticalStrut(10));
         side.add(algoLbl);
         side.add(Box.createVerticalStrut(4));
-        // Shrink the combo box height/width for BoxLayout
+
         algoSelect.setPrototypeDisplayValue("Dijkstra");
         algoSelect.setPreferredSize(new Dimension(160, 28));
         algoSelect.setMaximumSize(new Dimension(200, 28));
@@ -142,18 +139,17 @@ public class UBMapFrame extends JFrame {
 
         add(side, BorderLayout.EAST);
 
-        // Configure tile factory (OSM) with HTTPS and custom UA
         try {
             System.setProperty("http.agent", "ubmaproute/1.0 (UB route planner)");
-        } catch (Throwable ignore) {}
+        } catch (Throwable ignore) {
+        }
         TileFactoryInfo info = new HttpsOsmTileFactoryInfo();
         DefaultTileFactory tileFactory = new DefaultTileFactory(info);
         tileFactory.setThreadPoolSize(4);
         map.setTileFactory(tileFactory);
 
-        // Center map on Ulaanbaatar
         GeoPosition ub = new GeoPosition(47.9185, 106.9176);
-        map.setZoom(8); // default city zoom
+        map.setZoom(8);
         map.setAddressLocation(ub);
 
         installHandlers();
@@ -167,9 +163,11 @@ public class UBMapFrame extends JFrame {
 
     private void updateOverlay() {
         List<Painter<JXMapViewer>> painters = new ArrayList<>();
-        if (roadsPainter != null) painters.add(roadsPainter);
+        if (roadsPainter != null)
+            painters.add(roadsPainter);
         painters.add(pointsPainter);
-        if (routePainter != null) painters.add(routePainter);
+        if (routePainter != null)
+            painters.add(routePainter);
         map.setOverlayPainter(new CompoundPainter<>(painters));
         map.repaint();
     }
@@ -179,21 +177,25 @@ public class UBMapFrame extends JFrame {
         clearBtn.addActionListener(e -> clearAll());
         routeBtn.addActionListener(e -> computeRoute());
 
-        // Enable drag-to-pan and wheel zoom
         PanMouseInputListener pan = new PanMouseInputListener(map);
         map.addMouseListener(pan);
         map.addMouseMotionListener(pan);
-        // clamp center while dragging
-        map.addMouseMotionListener(new MouseMotionAdapter(){
-            @Override public void mouseDragged(MouseEvent e){ clampCenter(); }
+
+        map.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                clampCenter();
+            }
         });
-        // custom wheel zoom with bounds
+
         map.addMouseWheelListener((MouseWheelEvent e) -> {
             int zoom = map.getZoom();
             int rot = e.getWheelRotation();
             int newZoom = zoom + (rot > 0 ? 1 : -1);
-            if (newZoom < MIN_ZOOM) newZoom = MIN_ZOOM;
-            if (newZoom > MAX_ZOOM) newZoom = MAX_ZOOM;
+            if (newZoom < MIN_ZOOM)
+                newZoom = MIN_ZOOM;
+            if (newZoom > MAX_ZOOM)
+                newZoom = MAX_ZOOM;
             if (newZoom != zoom) {
                 map.setZoom(newZoom);
                 map.setAddressLocation(map.convertPointToGeoPosition(e.getPoint()));
@@ -208,11 +210,13 @@ public class UBMapFrame extends JFrame {
                     setStatus("Эхлээд замаа уншуулна уу!.");
                     return;
                 }
-                if (!SwingUtilities.isLeftMouseButton(e)) return;
+                if (!SwingUtilities.isLeftMouseButton(e))
+                    return;
                 GeoPosition pos = map.convertPointToGeoPosition(e.getPoint());
-                // clamp pick to UB bbox
+
                 pos = clampToBounds(pos);
-                if (pos == null) return;
+                if (pos == null)
+                    return;
 
                 Node nearest = graph.findNearestNode(pos.getLatitude(), pos.getLongitude());
                 if (nearest == null) {
@@ -243,9 +247,9 @@ public class UBMapFrame extends JFrame {
             ShapefileRoadGraphLoader loader = new ShapefileRoadGraphLoader(DEFAULT_SHP,
                     MIN_LON, MIN_LAT, MAX_LON, MAX_LAT);
             this.graph = loader.loadGraph();
-            System.out.println("Граф үүсгэх: зангилаа=" + graph.getNodeCount() + ", Ирмэг=" + graph.getEdgeCount());
+            System.out.println("Create graph: Nodes=" + graph.getNodeCount() + ", Edges=" + graph.getEdgeCount());
             setStatus("Уншсан зангилаа=" + graph.getNodeCount() + ", Ирмэг=" + graph.getEdgeCount());
-            // Build painter for roads so user sees the network without internet tiles
+
             this.roadsPainter = new GraphPainter(graph);
             updateOverlay();
         } catch (Exception ex) {
@@ -255,8 +259,14 @@ public class UBMapFrame extends JFrame {
     }
 
     private void computeRoute() {
-        if (graph == null) { setStatus("Эхлээд замаа уншуулна уу!."); return; }
-        if (startNode == null || endNode == null) { setStatus("Эхлэх болон хүрэх цэгээ сонго."); return; }
+        if (graph == null) {
+            setStatus("Эхлээд замаа уншуулна уу!.");
+            return;
+        }
+        if (startNode == null || endNode == null) {
+            setStatus("Эхлэх болон хүрэх цэгээ сонго.");
+            return;
+        }
         try {
             List<Node> path;
             String algo = Objects.toString(algoSelect.getSelectedItem(), "Dijkstra");
@@ -286,13 +296,13 @@ public class UBMapFrame extends JFrame {
             double meters = GeoUtils.pathLengthMeters(path);
             double secs = graph.pathWeightSeconds(path);
             String summary = String.format(
-                "Алгоритм: %s | Зангилаа: %,dnodes | Замын урт: %.2fkm | Гүйцэтгэлийн Хугацаа: %.1fmin | Тооцоо: %dms | Санах ой: %.2fMB",
-                algo.toLowerCase(), path.size(), meters/1000.0, secs/60.0, dt, memMB);
-            // Update right-side info boxes
+                    "Алгоритм: %s | Зангилаа: %,dnodes | Замын урт: %.2fkm | Гүйцэтгэлийн Хугацаа: %.1fmin | Тооцоо: %dms | Санах ой: %.2fMB",
+                    algo.toLowerCase(), path.size(), meters / 1000.0, secs / 60.0, dt, memMB);
+
             algoBox.setText(algo);
             nodesBox.setText(String.format("%dnodes", path.size()));
-            distBox.setText(String.format("%.2fkm", meters/1000.0));
-            timeBox.setText(String.format("%.1fmin", secs/60.0));
+            distBox.setText(String.format("%.2fkm", meters / 1000.0));
+            timeBox.setText(String.format("%.1fmin", secs / 60.0));
             msBox.setText(String.format("%dms", dt));
             memBox.setText(String.format("%.2fMB", memMB));
             setStatus("Замыг тооцолсон");
@@ -304,7 +314,8 @@ public class UBMapFrame extends JFrame {
 
     private void drawPath(List<Node> path) {
         List<GeoPosition> coords = new ArrayList<>();
-        for (Node n : path) coords.add(new GeoPosition(n.lat, n.lon));
+        for (Node n : path)
+            coords.add(new GeoPosition(n.lat, n.lon));
         routePainter = new RoutePainter(coords, Color.BLUE, 3f);
         updateOverlay();
     }
@@ -328,16 +339,22 @@ public class UBMapFrame extends JFrame {
         return String.format("(%.5f, %.5f)", n.lat, n.lon);
     }
 
-    private void setStatus(String s) { status.setText(s); }
-    private void setResult(String s) { result.setText(s); }
+    private void setStatus(String s) {
+        status.setText(s);
+    }
+
+    private void setResult(String s) {
+        result.setText(s);
+    }
+
     private static long usedMemory() {
         Runtime rt = Runtime.getRuntime();
         return rt.totalMemory() - rt.freeMemory();
     }
 
     private void clampCenter() {
-        // compute current center and clamp to UB bbox
-        Point centerPixel = new Point(map.getWidth()/2, map.getHeight()/2);
+
+        Point centerPixel = new Point(map.getWidth() / 2, map.getHeight() / 2);
         GeoPosition center = map.convertPointToGeoPosition(centerPixel);
         GeoPosition clamped = clampToBounds(center);
         if (!center.equals(clamped)) {
@@ -346,22 +363,26 @@ public class UBMapFrame extends JFrame {
     }
 
     private GeoPosition clampToBounds(GeoPosition p) {
-        if (p == null) return null;
+        if (p == null)
+            return null;
         double lat = p.getLatitude();
         double lon = p.getLongitude();
-        if (lat < MIN_LAT) lat = MIN_LAT;
-        if (lat > MAX_LAT) lat = MAX_LAT;
-        if (lon < MIN_LON) lon = MIN_LON;
-        if (lon > MAX_LON) lon = MAX_LON;
+        if (lat < MIN_LAT)
+            lat = MIN_LAT;
+        if (lat > MAX_LAT)
+            lat = MAX_LAT;
+        if (lon < MIN_LON)
+            lon = MIN_LON;
+        if (lon > MAX_LON)
+            lon = MAX_LON;
         return new GeoPosition(lat, lon);
     }
 
-    // Helpers for right-side info boxes
     private static JTextField createInfoBox() {
         JTextField tf = new JTextField();
         tf.setEditable(false);
         tf.setHorizontalAlignment(SwingConstants.CENTER);
-        tf.setBorder(new LineBorder(new Color(180,180,180)));
+        tf.setBorder(new LineBorder(new Color(180, 180, 180)));
         tf.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
         return tf;
     }
@@ -378,9 +399,9 @@ public class UBMapFrame extends JFrame {
         return p;
     }
 
-    // Painters
     private static class HttpsOsmTileFactoryInfo extends OSMTileFactoryInfo {
-        @Override public String getTileUrl(int x, int y, int zoom) {
+        @Override
+        public String getTileUrl(int x, int y, int zoom) {
             String url = super.getTileUrl(x, y, zoom);
             if (url != null && url.startsWith("http://")) {
                 return "https://" + url.substring("http://".length());
@@ -388,11 +409,18 @@ public class UBMapFrame extends JFrame {
             return url;
         }
     }
+
     private static class GraphPainter implements Painter<JXMapViewer> {
         private final com.example.graph.Graph g;
-        GraphPainter(com.example.graph.Graph g) { this.g = g; }
-        @Override public void paint(Graphics2D g2, JXMapViewer map, int w, int h) {
-            if (g == null) return;
+
+        GraphPainter(com.example.graph.Graph g) {
+            this.g = g;
+        }
+
+        @Override
+        public void paint(Graphics2D g2, JXMapViewer map, int w, int h) {
+            if (g == null)
+                return;
             Graphics2D g = (Graphics2D) g2.create();
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g.setColor(new Color(80, 80, 80));
@@ -401,7 +429,7 @@ public class UBMapFrame extends JFrame {
             g.translate(-rect.x, -rect.y);
             for (com.example.graph.Node n : this.g.getNodes()) {
                 for (com.example.graph.Edge e : this.g.edgesOf(n)) {
-                    // draw each undirected edge once
+
                     if (e.from.id < e.to.id) {
                         GeoPosition a = new GeoPosition(e.from.lat, e.from.lon);
                         GeoPosition b = new GeoPosition(e.to.lat, e.to.lon);
@@ -414,15 +442,22 @@ public class UBMapFrame extends JFrame {
             g.dispose();
         }
     }
+
     private static class RoutePainter implements Painter<JXMapViewer> {
         private final List<GeoPosition> track;
         private final Color color;
         private final float width;
+
         RoutePainter(List<GeoPosition> track, Color color, float width) {
-            this.track = track; this.color = color; this.width = width;
+            this.track = track;
+            this.color = color;
+            this.width = width;
         }
-        @Override public void paint(Graphics2D g, JXMapViewer map, int w, int h) {
-            if (track == null || track.size() < 2) return;
+
+        @Override
+        public void paint(Graphics2D g, JXMapViewer map, int w, int h) {
+            if (track == null || track.size() < 2)
+                return;
             g = (Graphics2D) g.create();
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g.setColor(color);
@@ -432,7 +467,8 @@ public class UBMapFrame extends JFrame {
             Point2D prev = null;
             for (GeoPosition gp : track) {
                 Point2D pt = map.getTileFactory().geoToPixel(gp, map.getZoom());
-                if (prev != null) g.drawLine((int) prev.getX(), (int) prev.getY(), (int) pt.getX(), (int) pt.getY());
+                if (prev != null)
+                    g.drawLine((int) prev.getX(), (int) prev.getY(), (int) pt.getX(), (int) pt.getY());
                 prev = pt;
             }
             g.dispose();
@@ -441,26 +477,37 @@ public class UBMapFrame extends JFrame {
 
     private static class PointsPainter implements Painter<JXMapViewer> {
         private Node start, end;
-        void setStart(Node n) { this.start = n; }
-        void setEnd(Node n) { this.end = n; }
-        @Override public void paint(Graphics2D g, JXMapViewer map, int w, int h) {
+
+        void setStart(Node n) {
+            this.start = n;
+        }
+
+        void setEnd(Node n) {
+            this.end = n;
+        }
+
+        @Override
+        public void paint(Graphics2D g, JXMapViewer map, int w, int h) {
             g = (Graphics2D) g.create();
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             Rectangle rect = map.getViewportBounds();
             g.translate(-rect.x, -rect.y);
-            if (start != null) drawPoint(g, map, start, Color.GREEN);
-            if (end != null) drawPoint(g, map, end, Color.RED);
+            if (start != null)
+                drawPoint(g, map, start, Color.GREEN);
+            if (end != null)
+                drawPoint(g, map, end, Color.RED);
             g.dispose();
         }
+
         private void drawPoint(Graphics2D g, JXMapViewer map, Node n, Color c) {
             GeoPosition gp = new GeoPosition(n.lat, n.lon);
             Point2D pt = map.getTileFactory().geoToPixel(gp, map.getZoom());
             int r = 6;
             g.setColor(c);
-            g.fillOval((int) pt.getX() - r, (int) pt.getY() - r, r*2, r*2);
+            g.fillOval((int) pt.getX() - r, (int) pt.getY() - r, r * 2, r * 2);
             g.setColor(Color.BLACK);
             g.setStroke(new BasicStroke(1f));
-            g.drawOval((int) pt.getX() - r, (int) pt.getY() - r, r*2, r*2);
+            g.drawOval((int) pt.getX() - r, (int) pt.getY() - r, r * 2, r * 2);
         }
     }
 }

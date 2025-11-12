@@ -1,0 +1,33 @@
+import java.util.*;
+
+class Solution {
+
+    final int MOD = 1337;
+
+    public int superPow(int a, int[] b) {
+        return recModPow(a, b, b.length);
+    }
+
+    private int recModPow(int a, int[] b, int len) {
+        if (len == 0) return 1;
+
+        int lastDigit = b[len - 1];
+        int part1 = modPow(recModPow(a, b, len - 1), 10);
+        int part2 = modPow(a, lastDigit);
+
+        return (part1 * part2) % MOD;
+    }
+
+    private int modPow(int a, int k) {
+        a %= MOD;
+        int result = 1;
+        while (k > 0) {  
+            if ((k & 1) == 1) { 
+                result = (result * a) % MOD;
+            }
+            a = (a * a) % MOD;
+            k >>= 1;
+        }
+        return result;
+    }
+}
