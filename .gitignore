@@ -42,13 +42,11 @@
 *.docx
 All lecture/*
 /data/
-mapdata/*
+
+# mapdata file
+mapdata/
 !mapdata/README.md
 .venv/
 
-# mapdata file
-**/Bie daalt 1/ubmaproute/.cpg
-**/Bie daalt 1/ubmaproute/.dbf
-**/Bie daalt 1/ubmaproute/.prj
-**/Bie daalt 1/ubmaproute/.qix
-**/Bie daalt 1/ubmaproute/.shx
+
+
