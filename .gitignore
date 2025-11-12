@@ -44,7 +44,7 @@ All lecture/*
 /data/
 
 # mapdata file
-mapdata/
+Bie daalt 1/ubmaproute/mapdata/*
 !mapdata/README.md
 .venv/
 
