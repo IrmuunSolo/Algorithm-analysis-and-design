@@ -1,0 +1,29 @@
+class Solution {
+    public int twoCitySchedCost(int[][] costs) {
+        // costA - costB утгаар эрэмбэлнэ
+        java.util.Arrays.sort(costs, (a, b) ->
+                Integer.compare(a[0] - a[1], b[0] - b[1])
+        );
+
+        int n = costs.length / 2;
+        int ans = 0;
+
+        // Эхний n хүн A хот руу
+        for (int i = 0; i < n; i++) {
+            ans += costs[i][0];
+        }
+
+        // Үлдсэн n хүн B хот руу
+        for (int i = n; i < 2 * n; i++) {
+            ans += costs[i][1];
+        }
+
+        return ans;
+    }
+}
+
+//    2n хүн байна.
+//    Хүн бүрийг A хот эсвэл B хот руу явуулна.
+//    costs[i] = [costA, costB] — i-дэх хүнийг A хот руу явуулах үнэ, B хот руу явуулах үнэ.
+//    Яг n хүнийг A хот, n хүнийг B хот руу явуулах ёстой.
+//    Нийт зардлыг хамгийн бага болго.

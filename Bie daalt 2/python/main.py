@@ -3,6 +3,11 @@ from time import perf_counter
 import tracemalloc
 from text_justify import greedy_justify, dp_justify
 
+# path: cd "Bie daalt 2/python"
+# virtual env: .\.venv\Scripts\Activate.ps1
+# run: python .\main.py
+# test: python -m unittest discover -s tests -v
+
 
 def tokenize(text: str) -> List[str]:
     return [w for w in text.split() if w]

@@ -6,6 +6,9 @@ import java.util.*;
 import java.lang.management.ManagementFactory;
 import com.sun.management.ThreadMXBean;
 
+// Build: mvn -q -DskipTests package
+// Run: java -cp target/justify-1.0-SNAPSHOT.jar com.example.justify.App
+
 public class App {
     static int promptInt(BufferedReader br, String msg) throws IOException {
         while (true) {

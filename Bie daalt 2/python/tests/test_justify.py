@@ -31,17 +31,24 @@ class TestJustify(unittest.TestCase):
             else:
                 self.assertEqual(len(ln), width)
 
+    def _words_preserved(self, lines, original_words):
+        joined = " ".join(w.strip() for w in original_words)
+        out_joined = " ".join(" ".join(line.strip().split()) for line in lines)
+        self.assertEqual(joined, out_joined)
+
     def test_greedy_basic(self):
         words = SAMPLE_EN.split()
         w = 30
         lines = greedy_justify(words, w)
         self._common_checks(lines, w)
+        self._words_preserved(lines, words)
 
     def test_dp_basic(self):
         words = SAMPLE_EN.split()
         w = 30
         lines = dp_justify(words, w)
         self._common_checks(lines, w)
+        self._words_preserved(lines, words)
 
     def test_mongolian_unicode(self):
         words = SAMPLE_MN.split()
@@ -51,8 +58,29 @@ class TestJustify(unittest.TestCase):
         self._common_checks(lines_g, w)
         self._common_checks(lines_d, w)
         self.assertLessEqual(badness(lines_d, w), badness(lines_g, w))
+        self._words_preserved(lines_d, words)
+
+    def test_exact_fit_line(self):
+        words = ["abcd", "efg"]  # 4 + 1 + 3 = 8
+        w = 8
+        for fn in (greedy_justify, dp_justify):
+            lines = fn(words, w)
+            self.assertEqual(["abcd efg"], [ln.rstrip() for ln in lines])
+
+    def test_single_long_word(self):
+        word = "x" * 40
+        w = 30
+        for fn in (greedy_justify, dp_justify):
+            lines = fn([word], w)
+            self.assertEqual(lines[0].strip(), word)
+
+    def test_two_words_vs_single_word_penalty(self):
+        words = ["aaaaa", "bbbbb", "cc"]
+        w = 11
+        lines_d = dp_justify(words, w)
+        self.assertIn("aaaaa bbbbb", [ln.rstrip() for ln in lines_d])
+        self._common_checks(lines_d, w)
 
 
 if __name__ == "__main__":
     unittest.main()
-

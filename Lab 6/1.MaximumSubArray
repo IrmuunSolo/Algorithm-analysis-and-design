@@ -1,0 +1,27 @@
+class Solution {
+    public int maxSubArray(int[] nums) { 
+        return f( nums, 0, nums.length-1 ); 
+    }
+    int f( int[] nums, int l, int r){
+        if( l==r ) return nums[l];
+
+        int m = (l+r)/2;
+        int L = f(nums,l,m);
+        int R = f(nums, m+1 ,r);
+
+        int s=0;
+        int lm=Integer.MIN_VALUE;
+        int rm=Integer.MIN_VALUE;
+
+        for( int i=m; i>=l; i--) 
+            lm=Math.max(lm,s+=nums[i]);
+
+        s=0;
+
+        for(int i=m+1;i<=r;i++)
+            rm=Math.max(rm,s+=nums[i]);
+
+        return Math.max(Math.max(L,R), lm+rm);
+    }
+}
+

@@ -3,17 +3,6 @@ package com.example.justify;
 import java.util.*;
 
 public class DPJustifier {
-    static int lineLength(List<String> words, int i, int j) {
-        int len = 0;
-        for (int k = i; k <= j; k++) len += words.get(k).length();
-        return len + (j - i);
-    }
-
-    static int badness(int maxWidth, int used) {
-        int rem = maxWidth - used;
-        return rem * rem * rem;
-    }
-
     public static List<String> justify(List<String> words, int maxWidth) {
         int n = words.size();
         long INF = Long.MAX_VALUE / 4;
@@ -23,9 +12,9 @@ public class DPJustifier {
         for (int i = n - 1; i >= 0; i--) {
             long best = INF; int bestJ = -1;
             for (int j = i; j < n; j++) {
-                int used = lineLength(words, i, j);
+                int used = JustifyHelper.lineLength(words, i, j);
                 if (used > maxWidth) break;
-                long c = (j == n - 1) ? 0 : badness(maxWidth, used);
+                long c = (j == n - 1) ? 0 : JustifyHelper.badness(maxWidth, used);
                 long total = c + cost[j + 1];
                 if (total < best) { best = total; bestJ = j; }
             }
@@ -44,9 +33,8 @@ public class DPJustifier {
         for (int idx = 0; idx < lines.size(); idx++) {
             List<String> lw = lines.get(idx);
             boolean isLast = idx == lines.size() - 1;
-            out.add(GreedyJustifier.formatLine(lw, maxWidth, isLast));
+            out.add(JustifyHelper.formatLine(lw, maxWidth, isLast));
         }
         return out;
     }
 }
-

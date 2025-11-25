@@ -7,7 +7,6 @@
   - Алгоритмууд: `text_justify/algorithms_greedy.py`, `text_justify/algorithms_dp.py`
   - CLI: `main.py`
   - Тест: `tests/test_justify.py`
-  - Жишээ бичвэр: `samples/en.txt`, `samples/mn.txt`
 - Java (Maven): `Bie daalt 2/java/`
   - Алгоритмууд: `GreedyJustifier.java`, `DPJustifier.java`
   - CLI: `App.java`

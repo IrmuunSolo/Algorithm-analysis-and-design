@@ -1,15 +1,5 @@
 from typing import List, Sequence
-
-
-def _line_length(words: Sequence[str], i: int, j: int) -> int:
-    # length of words[i..j] with single spaces between
-    return sum(len(w) for w in words[i : j + 1]) + (j - i)
-
-
-def _badness(max_width: int, used: int) -> int:
-    # cube penalty of remaining spaces
-    rem = max_width - used
-    return rem * rem * rem
+from .helpers import line_length, badness, format_line
 
 
 def dp_justify(words: Sequence[str], max_width: int) -> List[str]:
@@ -26,7 +16,7 @@ def dp_justify(words: Sequence[str], max_width: int) -> List[str]:
         best_j = i
         j = i
         while j < n:
-            used = _line_length(words, i, j)
+            used = line_length(words, i, j)
             if used > max_width:
                 # Allow a single very long word to occupy its own line
                 if j == i:
@@ -37,9 +27,9 @@ def dp_justify(words: Sequence[str], max_width: int) -> List[str]:
                         best_j = j
                 break
             # last line gets zero cost to allow ragged-right last line
-            c = 0 if j == n - 1 else _badness(max_width, used)
+            c = 0 if j == n - 1 else badness(max_width, used)
             # discourage single-word lines except when a single word is the only fit
-            if j == i and j != n - 1 and (j + 1 < n) and (_line_length(words, i, j + 1) <= max_width):
+            if j == i and j != n - 1 and (j + 1 < n) and (line_length(words, i, j + 1) <= max_width):
                 c += 10**6
             total = c + cost[j + 1]
             if total < best:
@@ -70,15 +60,5 @@ def dp_justify(words: Sequence[str], max_width: int) -> List[str]:
             s = " ".join(line_words)
             out.append(s + " " * (max_width - len(s)))
         else:
-            total_chars = sum(len(w) for w in line_words)
-            spaces_needed = max_width - total_chars
-            slots = len(line_words) - 1
-            base = spaces_needed // slots
-            extra = spaces_needed % slots
-            parts = []
-            for k, w in enumerate(line_words[:-1]):
-                gap = base + (1 if k < extra else 0)
-                parts.append(w + (" " * gap))
-            parts.append(line_words[-1])
-            out.append("".join(parts))
+            out.append(format_line(line_words, max_width, is_last=False))
     return out

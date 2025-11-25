@@ -1,0 +1,237 @@
+import java.io.*;
+import java.util.*;
+
+public class Main {
+
+    // --- Fast scanner ---
+    private static class FastScanner {
+        private final InputStream in;
+        private final byte[] buffer = new byte[1 << 16];
+        private int ptr = 0, len = 0;
+
+        FastScanner(InputStream is) { in = is; }
+
+        private int read() throws IOException {
+            if (ptr >= len) {
+                len = in.read(buffer);
+                ptr = 0;
+                if (len <= 0) return -1;
+            }
+            return buffer[ptr++];
+        }
+
+        int nextInt() throws IOException {
+            int c;
+            do c = read(); while (c <= ' ' && c != -1);
+            int sign = 1;
+            if (c == '-') { sign = -1; c = read(); }
+            int val = 0;
+            while (c > ' ') {
+                val = val * 10 + c - '0';
+                c = read();
+            }
+            return val * sign;
+        }
+    }
+
+    // --- Min-heap of ints (array based) ---
+    private static class IntHeap {
+        int[] h = new int[1 << 17];
+        int sz = 0;
+
+        void clear() { sz = 0; }
+
+        void push(int x) {
+            int i = ++sz;
+            int[] hh = h;
+            if (sz >= hh.length) {
+                h = Arrays.copyOf(hh, hh.length << 1);
+                hh = h;
+            }
+            hh[i] = x;
+            while (i > 1) {
+                int p = i >> 1;
+                if (hh[p] <= hh[i]) break;
+                int tmp = hh[p]; hh[p] = hh[i]; hh[i] = tmp;
+                i = p;
+            }
+        }
+
+        int pop() {
+            int[] hh = h;
+            int res = hh[1];
+            int x = hh[sz--];
+            int i = 1;
+            while (true) {
+                int l = i << 1, r = l + 1;
+                if (l > sz) break;
+                int minChild = l;
+                if (r <= sz && hh[r] < hh[l]) minChild = r;
+                if (hh[minChild] >= x) break;
+                hh[i] = hh[minChild];
+                i = minChild;
+            }
+            hh[i] = x;
+            return res;
+        }
+
+        int size() { return sz; }
+        boolean isEmpty() { return sz == 0; }
+    }
+
+    static final int MAXV = 100000 + 5;
+
+    static int n, q;
+    static int[] a;
+    static int BLOCK;         // Mo block for l
+    static int B;             // freq threshold (bucket / heap split)
+
+    static int[] cnt  = new int[MAXV]; // count per value in current segment
+    static int[] fre;                  // fre[f] = how many values have freq f
+    static int[] tmpFreq;              // copy of fre[1..B] for each query
+    static int[] heavyVals = new int[MAXV]; // values that might be "heavy"
+    static int heavyCnt = 0;
+
+    // Mo query
+    private static class Query {
+        int l, r, id, blk;
+    }
+
+    static void upd(int pos, int delta) {
+        int v = a[pos];
+        int c = cnt[v];
+        fre[c]--;
+        c += delta;
+        cnt[v] = c;
+        fre[c]++;
+    }
+
+    // Huffman greedy using bucket + heap
+    static long calcHuffman(IntHeap heap) {
+        long ans = 0L;
+
+        // small freqs
+        System.arraycopy(fre, 0, tmpFreq, 0, B + 1);
+
+        heap.clear();
+        // big freqs (>= B)
+        for (int i = 0; i < heavyCnt; i++) {
+            int v = heavyVals[i];
+            if (cnt[v] >= B) heap.push(cnt[v]);
+        }
+
+        int last = 0;
+
+        for (int f = 1; f < B; f++) {
+            int x = tmpFreq[f];
+            if (x == 0) continue;
+
+            // if we had a leftover small weight: merge it with one f
+            if (last > 0) {
+                x--;
+                int s = last + f;
+                ans += s;
+                if (s < B) tmpFreq[s]++; else heap.push(s);
+                last = 0;
+            }
+
+            if (x <= 0) continue;
+
+            // merge them in pairs: each pair adds 2*f
+            int pairs = x >> 1; // x/2
+            if (pairs > 0) {
+                ans += (long) pairs * (2L * f);
+                int d = f << 1;
+                if (d < B) {
+                    tmpFreq[d] += pairs;
+                } else {
+                    // each pair becomes one big frequency d
+                    while (pairs-- > 0) heap.push(d);
+                }
+            }
+
+            // if odd, one leftover with freq f
+            if ((x & 1) == 1) last = f;
+        }
+
+        if (last > 0) heap.push(last);
+
+        // now standard Huffman on the heap
+        while (heap.size() > 1) {
+            int x = heap.pop();
+            int y = heap.pop();
+            int s = x + y;
+            ans += s;
+            heap.push(s);
+        }
+
+        return ans;
+    }
+
+    public static void main(String[] args) throws Exception {
+        FastScanner fs = new FastScanner(System.in);
+        n = fs.nextInt();
+        a = new int[n + 1];
+        int[] total = new int[MAXV];
+
+        for (int i = 1; i <= n; i++) {
+            a[i] = fs.nextInt();
+            if (++total[a[i]] == 1) {
+                // we’ll check heavy later
+            }
+        }
+
+        // threshold for heavy values (sqrt(n * log n) works well; sqrt(n) ч болно)
+        BLOCK = (int) Math.sqrt(n);
+        B = (int) Math.sqrt(n * Math.log(Math.max(2, n)));
+        if (B < 2) B = 2;
+
+        // heavy values: those that MAY reach >= B in some segment
+        for (int v = 1; v < MAXV; v++) {
+            if (total[v] >= B) {
+                heavyVals[heavyCnt++] = v;
+            }
+        }
+
+        q = fs.nextInt();
+        Query[] qs = new Query[q];
+        for (int i = 0; i < q; i++) {
+            Query qq = new Query();
+            qq.l = fs.nextInt();
+            qq.r = fs.nextInt();
+            qq.id = i;
+            qq.blk = qq.l / BLOCK;
+            qs[i] = qq;
+        }
+
+        Arrays.sort(qs, (x, y) -> {
+            if (x.blk != y.blk) return x.blk - y.blk;
+            return x.blk % 2 == 0 ? x.r - y.r : y.r - x.r; // little trick for speed
+        });
+
+        fre = new int[n + 2];
+        tmpFreq = new int[B + 2];
+        Arrays.fill(cnt, 0);
+        fre[0] = MAXV; // чухал биш, зүгээр хоггүй байг
+
+        long[] ans = new long[q];
+
+        IntHeap heap = new IntHeap();
+
+        int curL = 1, curR = 0;
+        for (Query qi : qs) {
+            int L = qi.l, R = qi.r;
+
+            while (curL > L) upd(--curL, +1);
+            while (curR < R) upd(++curR, +1);
+            while (curL < L) upd(curL++, -1);
+            while (curR > R) upd(curR--, -1);
+
+            ans[qi.id] = calcHuffman(heap);
+        }
+
+        StringBuilder out = new StringBuilder();
+        for (int i = 0; i < q; i++) out.append(ans[i]).append('\n');
+        System.out.print(out.toString());
+    }
+}

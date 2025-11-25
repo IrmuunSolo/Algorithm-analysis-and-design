@@ -1,0 +1,24 @@
+class Solution:
+    def maxProfit(self, prices: List[int]) -> int:
+        profit = 0
+        for i in range(1, len(prices)):
+            if prices[i] > prices[i - 1]:
+                profit += prices[i] - prices[i - 1]
+        return profit
+
+
+# Бодлого (Best Time to Buy and Sell Stock II)
+# prices[i] = i дэх өдөрх үнэ
+# Хязгаарлалт:
+# Дурын олон удаа авч, зарж болно
+# Гэхдээ нэгэн зэрэг олон хувьцаа барьж болохгүй
+# → (заавал зарсны дараа л дараагийн удаа авна)
+# Зорилго: нийт ашгийг хамгийн их болго.
+#
+# Алгоритм:
+# profit = 0
+# i = 1-ээс n-1 хүртэл гүйх
+# Хэрэв prices[i] > prices[i-1] бол:
+# Энэ хоёр өдрийн хооронд ашиг гарч байна
+# → profit += prices[i] - prices[i-1]
+# Эцэст нь profit хариу болно.
